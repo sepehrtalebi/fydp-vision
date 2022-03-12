@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 import os
-
+import math
 
 import matplotlib.pyplot as plt
 #from matplotlib import pyplot as plt
@@ -21,7 +21,11 @@ def videoparsing(video, i):
             break
         cv2.imwrite('frame' + str(i) + '.jpg', frame)
         i += 1
-
+        
+def opticalflow(img1, img2):
+    flow = cv2.calcOpticalFlowFarneback(self.prvs, next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+    velocity = np.mean(flow, axis=(0, 1))
+    return velocity
 
 def Distanceperp(x1, x3, height, m1, b1, m2, b2):
     if m1 == 0 and m2 == 0:
@@ -309,9 +313,24 @@ while True:
     leftrailheadwidth = 0
     meangauge = 0
     success=0
+    
+    opticalflowframe1 = 0
+    opticalflowframe2 = 0
+    
     while x < 1:
         print(x)
         img = cv2.imread('Images for MDR/Frames/frame ' + str(x) + '.jpg')
+        
+        #calculate optical flow
+        opticalflowframe2=img
+        
+        if opticalflowframe1!=0:
+            velocity = opticalflow(opticalflowframe1, opticalflowframe2)
+        else:
+            velocity = (0,0)
+        
+        speed = math.sqrt(velocity[0]*velocity[0] + velocity[1]*velocity[1])
+        
         img3 = np.copy(img)
         ret, img2 = cv2.threshold(img, 75, 255, cv2.THRESH_BINARY_INV)
         dst = cv2.Canny(img2, 50, 200, None, 3)
@@ -358,5 +377,8 @@ while True:
 
         # img3[y_offset:y_offset + crop_img.shape[0], x_offset:x_offset + s_img.shape[1]] = s_img
         x += 1
+        opticalflowframe1 = opticalflowframe2
+        
+        
     cv2.waitKey(0)
     cv2.waitKey(1)
