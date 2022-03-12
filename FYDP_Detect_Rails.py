@@ -372,6 +372,13 @@ while True:
         cv2.putText(img3, f"Mean Gauge: {numpy.around(meangauge, 1)} px", (700, 500), 0, 0.5, (0, 0, 255), 1, 2)
         img3[y_offset:y_end, x_offset:x_end] = crop_img2
         path = 'Images for MDR/Processed'
+        
+        #add optical flow vector
+        startpoint = (1100,20)
+        endpoint = (1100 + velocity[0]/100 , 20+100*velocity[1])
+        img3 = cv2.arrowedLine(img3, start_point, end_point, color, thickness)
+        
+        
         cv2.imwrite(os.path.join(path, ("Processed Image " + str(x) + '.jpg')), img3)
         # cv2.imshow("Detected Lines (in red) - Standard Hough Line Transform"+ str(x) + '.jpg', img3)
 
