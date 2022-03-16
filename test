@@ -1,0 +1,22 @@
+import numpy as np
+import cv2
+import os
+
+speed = 55
+
+startpoint = (1200,600)
+endpoint = (1205 , 500)
+
+center =(round((startpoint[0]+endpoint[0])/2) , round((startpoint[1]+endpoint[1])/2))
+
+img3 = cv2.imread('Images for MDR/Frames/frame 0.jpg')
+
+color1 = (0,0,255)
+color2 = (255,25,0)
+
+img3 = cv2.arrowedLine(img3, startpoint, endpoint, color=color1, thickness = 2)
+img3 = cv2.circle(img3, center, 70, color = color2, thickness = 2)
+img3 = cv2.putText(img3, f"Speed: {speed} px/s", (startpoint[0]-60, 650), 0, 0.5, (0, 0, 255), 1, 2)
+
+cv2.imwrite('C:\\Users\\taleb\\Desktop\\New folder (2)\\img3.jpg', img3)
+

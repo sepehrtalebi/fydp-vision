@@ -23,7 +23,9 @@ def videoparsing(video, i):
         i += 1
         
 def opticalflow(img1, img2):
-    flow = cv2.calcOpticalFlowFarneback(self.prvs, next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+    prvs = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+    next = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+    flow = cv2.calcOpticalFlowFarneback(prvs, next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
     velocity = np.mean(flow, axis=(0, 1))
     return velocity
 
@@ -315,10 +317,10 @@ while True:
     meangauge = 0
     success=0
     
-    opticalflowframe1 = 0
+    opticalflowframe1 = False
     opticalflowframe2 = 0
     
-    while x < 1:
+    while x < 5:
         print(x)
         img = cv2.imread('Images for MDR/Frames/frame ' + str(x) + '.jpg')
         
@@ -326,14 +328,25 @@ while True:
         
         opticalflowframe2=img
         
-        if opticalflowframe1!=0:
+        if x>0:
             velocity = opticalflow(opticalflowframe1, opticalflowframe2)
         else:
             velocity = (0,0)
         
-        speed = math.sqrt(velocity[0]*velocity[0] + velocity[1]*velocity[1])
+        speed = math.sqrt(velocity[0]*velocity[0] + velocity[1]*velocity[1])*100
         
-        img3 = np.copy(img)
+        #add optical flow vector
+        startpoint = (100,20)
+        endpoint = (100  , 120)
+        color1 = (0,0,255)
+        color2 = (255,25,0)
+        center =(round((startpoint[0]+endpoint[0])/2) , round((startpoint[1]+endpoint[1])/2))
+        img1 = cv2.arrowedLine(img, startpoint, endpoint, color=color1, thickness = 2)
+        img1 = cv2.circle(img, center, 70, color = color2, thickness = 2)
+        img1 = cv2.putText(img, f"Speed: {speed} px/s", (startpoint[0]-60, 650), 0, 0.5, (0, 0, 255), 1, 2)
+
+
+        img3 = np.copy(img1)
         ret, img2 = cv2.threshold(img, 75, 255, cv2.THRESH_BINARY_INV)
         dst = cv2.Canny(img2, 50, 200, None, 3)
         cdst = cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
@@ -360,7 +373,7 @@ while True:
         y_end = y_offset + crop_img.shape[0]
         cv2.rectangle(crop_img, (0, 0), (115, 200), (255, 0, 0), 2)
         cv2.putText(img3, "Left Rail", (320, 160), 0, 0.5, (0, 0, 255), 1, 2)
-        cv2.putText(img3, f"Rail Head Width: {numpy.around(leftrailheadwidth, 1)} px", (300, 380), 0, 0.3, (0, 0, 255),
+        cv2.putText(img3, f"Rail Head Width: {np.around(leftrailheadwidth, 1)} px", (300, 380), 0, 0.3, (0, 0, 255),
                     1, 2)
         img3[y_offset:y_end, x_offset:x_end] = crop_img
         x_offset = 800
@@ -369,22 +382,18 @@ while True:
         y_end = y_offset + crop_img2.shape[0]
         cv2.rectangle(crop_img2, (0, 0), (115, 200), (255, 0, 0), 2)
         cv2.putText(img3, "Right Rail", (820, 160), 0, 0.5, (0, 0, 255), 1, 2)
-        cv2.putText(img3, f"Rail Head Width: {numpy.around(rightrailheadwidth, 1)} px", (800, 380), 0, 0.3, (0, 0, 255),
+        cv2.putText(img3, f"Rail Head Width: {np.around(rightrailheadwidth, 1)} px", (800, 380), 0, 0.3, (0, 0, 255),
                     1, 2)
-        cv2.putText(img3, f"Mean Gauge: {numpy.around(meangauge, 1)} px", (700, 500), 0, 0.5, (0, 0, 255), 1, 2)
+        cv2.putText(img3, f"Mean Gauge: {np.around(meangauge, 1)} px", (700, 500), 0, 0.5, (0, 0, 255), 1, 2)
         img3[y_offset:y_end, x_offset:x_end] = crop_img2
         path = 'Images for MDR/Processed'
         
-        #add optical flow vector
-        startpoint = (1100,20)
-        endpoint = (1100 + velocity[0]/100 , 20+100*velocity[1])
-        img3 = cv2.arrowedLine(img3, start_point, end_point, color, thickness)
-        cv2.putText(img3, f"Mean Gauge: {speed} px", (1100, 200), 0, 0.5, (0, 0, 255), 1, 2)
+     
         
         
         
         cv2.imwrite(os.path.join(path, ("Processed Image " + str(x) + '.jpg')), img3)
-        # cv2.imshow("Detected Lines (in red) - Standard Hough Line Transform"+ str(x) + '.jpg', img3)
+        #cv2.imshow("Detected Lines (in red) - Standard Hough Line Transform"+ str(x) + '.jpg', img3)
 
         # img3[y_offset:y_offset + crop_img.shape[0], x_offset:x_offset + s_img.shape[1]] = s_img
         x += 1
