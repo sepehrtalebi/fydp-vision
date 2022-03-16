@@ -320,7 +320,7 @@ while True:
     opticalflowframe1 = False
     opticalflowframe2 = 0
     
-    while x < 5:
+    while x < 3:
         print(x)
         img = cv2.imread('Images for MDR/Frames/frame ' + str(x) + '.jpg')
         
@@ -336,8 +336,8 @@ while True:
         speed = math.sqrt(velocity[0]*velocity[0] + velocity[1]*velocity[1])*100
         
         #add optical flow vector
-        startpoint = (100,20)
-        endpoint = (100  , 120)
+        startpoint = (1200  ,   600)
+        endpoint = (1205+velocity[1]  , 500)
         color1 = (0,0,255)
         color2 = (255,25,0)
         center =(round((startpoint[0]+endpoint[0])/2) , round((startpoint[1]+endpoint[1])/2))
