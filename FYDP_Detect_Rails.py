@@ -377,6 +377,8 @@ while True:
         startpoint = (1100,20)
         endpoint = (1100 + velocity[0]/100 , 20+100*velocity[1])
         img3 = cv2.arrowedLine(img3, start_point, end_point, color, thickness)
+        cv2.putText(img3, f"Mean Gauge: {speed} px", (1100, 200), 0, 0.5, (0, 0, 255), 1, 2)
+        
         
         
         cv2.imwrite(os.path.join(path, ("Processed Image " + str(x) + '.jpg')), img3)
