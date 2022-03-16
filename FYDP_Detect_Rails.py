@@ -297,14 +297,15 @@ def linedetection(lines, img3, img, linekeep, x, crop_img, crop_img2, rightrailw
 
 
 while True:
-    # i=0
-    # while (cap.isOpened()):
-    #    ret, frame = cap.read()
-    #    if ret == False:
-    #        break
-    #    path = 'Images for MDR/Frames'
-    #    cv2.imwrite(os.path.join(path, 'frame ' + str(i) + '.jpg'), frame)
-    #    i += 1
+    i=0
+    while (cap.isOpened()):
+        ret, frame = cap.read()
+        if ret == False:
+            break
+        path = 'Images for MDR/Frames'
+        cv2.imwrite(os.path.join(path, 'frame ' + str(i) + '.jpg'), frame)
+        i += 1
+
     x = 0
     linekeep = 500
     crop_img = np.zeros((200, 45, 3), np.uint8)
@@ -322,6 +323,7 @@ while True:
         img = cv2.imread('Images for MDR/Frames/frame ' + str(x) + '.jpg')
         
         #calculate optical flow
+        
         opticalflowframe2=img
         
         if opticalflowframe1!=0:
