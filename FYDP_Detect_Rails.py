@@ -100,20 +100,20 @@ def railoffsetimagecrop(img, x0i, x0f, x1i, x1f):
     b_leftinside=0
     m_leftinside=0
     left_rail_head_width=0
-    hist=cv2.calcHist([crop_img2], [0], None, [256], [0, 256])
-    plt.figure()
-    plt.title("Grayscale Histogram")
-    plt.xlabel("Bins")
-    plt.ylabel("# of Pixels")
-    plt.plot(hist)
-    plt.xlim([0, 256])
-    plt.show()
+    #hist=cv2.calcHist([crop_img2], [0], None, [256], [0, 256])
+    #plt.figure()
+    #plt.title("Grayscale Histogram")
+    #plt.xlabel("Bins")
+    #plt.ylabel("# of Pixels")
+    #plt.plot(hist)
+    #plt.xlim([0, 256])
+    #plt.show()
     ret, thresh = cv2.threshold(crop_img1, 50, 255, cv2.THRESH_BINARY_INV)
     ret, thresh2 = cv2.threshold(crop_img3, 80, 255, cv2.THRESH_BINARY_INV)
     thresh1 = cv2.Canny(thresh, 1500, 200, None, 3)
     thresh3 = cv2.Canny(thresh2, 200, 200, None, 3)
-    cv2.imshow("Leftrailhead", thresh)
-    cv2.imshow("Right rail head", thresh3)
+    #cv2.imshow("Leftrailhead", thresh)
+    #cv2.imshow("Right rail head", thresh3)
     lineshead = cv2.HoughLines(thresh1, 1, np.pi / 180, 50)
     lineshead2 = cv2.HoughLines(thresh3, 1, np.pi / 180, 60)
 
@@ -215,7 +215,7 @@ def railoffsetimagecrop(img, x0i, x0f, x1i, x1f):
                         m_leftinside = mleft2
                         b_leftinside = bleft2
                         x_leftinside = xthree
-    cv2.imshow("Leftrail head", crop_img)
+    #cv2.imshow("Leftrail head", crop_img)
     #cv2.imshow("right rail head", crop_img2)
     meangauge = Distanceperp(x_leftinside + xin, x_rightinside + xin2, 200, m_leftinside, b_leftinside, m_rightinside,
                                  b_rightinside)
@@ -309,6 +309,9 @@ while True:
         i += 1
 
     x = 0
+    flowcounter = 0
+    speed_ready = False
+
     linekeep = 500
     crop_img = np.zeros((200, 45, 3), np.uint8)
     crop_img2 = np.zeros((200, 45, 3), np.uint8)
@@ -319,8 +322,9 @@ while True:
     
     opticalflowframe1 = False
     opticalflowframe2 = 0
+    speeds = []
     
-    while x < 3:
+    while x < 500:
         print(x)
         img = cv2.imread('Images for MDR/Frames/frame ' + str(x) + '.jpg')
         
@@ -330,23 +334,33 @@ while True:
         
         if x>0:
             velocity = opticalflow(opticalflowframe1, opticalflowframe2)
+            temp = round((math.sqrt(velocity[0] * velocity[0] + velocity[1] * velocity[1]) * 100), 2)
+            speeds.append(temp)
+            flowcounter += 1
         else:
             velocity = (0,0)
-        
-        speed = math.sqrt(velocity[0]*velocity[0] + velocity[1]*velocity[1])*100
-        
+            flowcounter += 1
+
+        if flowcounter == 60:
+            speed_ready = True;
+            flowcounter = 0;
+            sum_num = 0
+            for i in speeds:
+                sum_num = sum_num + i
+
+            speed = sum_num / len(speeds)
+
+
+
+
         #add optical flow vector
-        startpoint = (1200  ,   600)
-        endpoint = (1205+velocity[1]  , 500)
+        startpoint = (int(1200),int(600))
+        endpoint = (int(1205+velocity[1]),int(500))
         color1 = (0,0,255)
         color2 = (255,25,0)
         center =(round((startpoint[0]+endpoint[0])/2) , round((startpoint[1]+endpoint[1])/2))
-        img1 = cv2.arrowedLine(img, startpoint, endpoint, color=color1, thickness = 2)
-        img1 = cv2.circle(img, center, 70, color = color2, thickness = 2)
-        img1 = cv2.putText(img, f"Speed: {speed} px/s", (startpoint[0]-60, 650), 0, 0.5, (0, 0, 255), 1, 2)
 
-
-        img3 = np.copy(img1)
+        img3 = np.copy(img)
         ret, img2 = cv2.threshold(img, 75, 255, cv2.THRESH_BINARY_INV)
         dst = cv2.Canny(img2, 50, 200, None, 3)
         cdst = cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
@@ -387,18 +401,17 @@ while True:
         cv2.putText(img3, f"Mean Gauge: {np.around(meangauge, 1)} px", (700, 500), 0, 0.5, (0, 0, 255), 1, 2)
         img3[y_offset:y_end, x_offset:x_end] = crop_img2
         path = 'Images for MDR/Processed'
-        
-     
-        
-        
-        
-        cv2.imwrite(os.path.join(path, ("Processed Image " + str(x) + '.jpg')), img3)
+
+        if speed_ready:
+            cv2.arrowedLine(img3, (startpoint), (endpoint), color=color1, thickness = 2)
+            cv2.circle(img3, center, 70, color = color2, thickness = 2)
+            cv2.putText(img3, f"Speed: {speed} px/s", (startpoint[0]-60, 650), 0, 0.5, (0, 0, 255), 1, 2)
+
+            cv2.imwrite(os.path.join(path, ("Processed Image " + str(x) + '.jpg')), img3)
         #cv2.imshow("Detected Lines (in red) - Standard Hough Line Transform"+ str(x) + '.jpg', img3)
 
         # img3[y_offset:y_offset + crop_img.shape[0], x_offset:x_offset + s_img.shape[1]] = s_img
         x += 1
         opticalflowframe1 = opticalflowframe2
         
-        
-    cv2.waitKey(0)
-    cv2.waitKey(1)
+
